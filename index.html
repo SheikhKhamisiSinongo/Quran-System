@@ -493,9 +493,21 @@
   <div class="disp-label"><span data-ar="تكرار من" data-en="repeat of"></span> <span id="dispTarget">3</span></div>
 </div>
 
-<audio id="audioEl" preload="none"></audio>
+<audio id="audioEl" preload="auto" crossorigin="anonymous"></audio>
 
 <script>
+// Audio error handler
+window.addEventListener('DOMContentLoaded', ()=>{
+  const audioEl = document.getElementById('audioEl');
+  audioEl.addEventListener('error', function(){
+    const msg = {ar:'❌ تعذّر تحميل الصوت — تحقق من الإنترنت',en:'❌ Audio failed — check internet',sw:'❌ Sauti haijapakiwa — angalia mtandao'}[LANG||'en']||'❌ Audio error';
+    if(typeof setStatus==='function') setStatus(msg);
+    if(typeof addLog==='function') addLog(msg);
+    S && (S.playing=false);
+    const btn=document.getElementById('playBtn');
+    if(btn) btn.textContent='▶';
+  });
+});
 // ══ STATE ══
 let LANG='ar';
 const T={
@@ -551,18 +563,32 @@ const RECITERS={
   'rifai':     {ar:'هاني الرفاعي',         en:'Hani Al-Rifai',folder:'rifai',     cdn:'ar.hanirifai'},
 };
 
-// Get audio URL — tries local first, falls back to CDN
+// Get audio URL — CDN always works, local files optional
 function getAudioUrl(reciterKey, surahNum) {
   const num = String(surahNum).padStart(3,'0');
   const rec = RECITERS[reciterKey];
-  // If running from GitHub Pages (files uploaded) — use local
-  const isGH = window.location.hostname.includes('github.io') ||
-               window.location.protocol === 'file:';
-  if (isGH && rec.folder) {
-    return `audio/${rec.folder}/${num}.mp3`;
-  }
-  // Fallback to CDN (needs internet)
+  // Always use CDN (works with internet, and from cache when offline)
   return `https://cdn.islamic.network/quran/audio-surah/128/${rec.cdn}/${surahNum}.mp3`;
+}
+
+// Play surah with error handling
+async function playSurah(reciterKey, surahNum) {
+  const url = getAudioUrl(reciterKey, surahNum);
+  audio.src = url;
+  audio.playbackRate = S.speed;
+  audio.load();
+  try {
+    await audio.play();
+    S.playing = true;
+    document.getElementById('playBtn').textContent = '⏸';
+    setStatus(tr('playing'));
+    updateWave();
+  } catch(e) {
+    // Autoplay blocked — user needs to press play manually
+    S.playing = false;
+    document.getElementById('playBtn').textContent = '▶';
+    setStatus({ar:'اضغط ▶ للتشغيل',en:'Press ▶ to play',sw:'Bonyeza ▶ kucheza'}[LANG]);
+  }
 }
 
 const S={currentReciter:'ar.abdulbasitmurattal',currentSurah:null,files:[],idx:-1,mode:'library',playing:false,repeatCount:3,pauseSec:3,speed:1,done:0,log:[],timer:null};
@@ -728,15 +754,17 @@ function filterSurahs(v){renderSurahs(v);}
 
 function selectSurah(num){
   S.currentSurah={num,arName:SAR[num-1],enName:SEN[num-1]};
-  S.mode='library';S.done=0;
+  S.mode='library';S.done=0;setRep(0);
   const url=getAudioUrl(currentReciterKey,num);
   audio.src=url;
+  audio.load();
   audio.playbackRate=S.speed;
-  updateNP();renderSurahs(document.getElementById('surahSearch').value);
+  updateNP();
+  renderSurahs(document.getElementById('surahSearch').value);
   const logPrefix={ar:'تم اختيار',en:'Selected',sw:'Imechaguliwa'}[LANG];
   addLog(`${logPrefix}: ${SAR[num-1]} — ${SEN[num-1]}`);
   document.querySelectorAll('.tab')[0].click();
-  setStatus(tr('ready'));
+  setStatus({ar:'اضغط ▶ للتشغيل',en:'Tap ▶ to play',sw:'Bonyeza ▶ kucheza'}[LANG]);
 }
 
 function updateNP(){
@@ -776,23 +804,48 @@ function removeFile(i){URL.revokeObjectURL(S.files[i].url);S.files.splice(i,1);i
 
 // ══ PLAYBACK ══
 function togglePlay(){
-  if(!audio.src||audio.src===window.location.href){alert(tr('addFiles'));return;}
-  if(S.playing){audio.pause();S.playing=false;document.getElementById('playBtn').textContent='▶';setStatus(tr('paused'));}
-  else{audio.play().catch(()=>{});S.playing=true;document.getElementById('playBtn').textContent='⏸';setStatus(tr('playing'));}
+  if(!audio.src||audio.src===window.location.href){
+    alert(tr('addFiles'));return;
+  }
+  if(S.playing){
+    audio.pause();S.playing=false;
+    document.getElementById('playBtn').textContent='▶';
+    setStatus(tr('paused'));
+  }else{
+    audio.play().then(()=>{
+      S.playing=true;
+      document.getElementById('playBtn').textContent='⏸';
+      setStatus(tr('playing'));
+    }).catch(err=>{
+      console.error('Play error:',err);
+      setStatus({ar:'خطأ في التشغيل — جرب مرة أخرى',en:'Play error — try again',sw:'Hitilafu — jaribu tena'}[LANG]);
+    });
+  }
   updateWave();
 }
+
 function startSession(){
-  if(!audio.src||audio.src===window.location.href){alert(tr('addFiles'));return;}
+  if(!audio.src||audio.src===window.location.href){
+    alert(tr('addFiles'));return;
+  }
   S.repeatCount=parseInt(document.getElementById('repeatCount').value);
   S.pauseSec=parseInt(document.getElementById('pauseDuration').value);
   S.done=0;setRep(0);
-  audio.currentTime=0;audio.playbackRate=S.speed;
-  audio.play().catch(()=>{});S.playing=true;
-  document.getElementById('playBtn').textContent='⏸';
-  setStatus(tr('playing'));updateNP();updateTarget(S.repeatCount);
-  document.getElementById('badgeRep').textContent=S.repeatCount+' ×';
-  document.getElementById('badgePause').textContent=S.pauseSec;
-  addLog(tr('sessionStart'));updateWave();
+  audio.currentTime=0;
+  audio.playbackRate=S.speed;
+  audio.play().then(()=>{
+    S.playing=true;
+    document.getElementById('playBtn').textContent='⏸';
+    setStatus(tr('playing'));
+    updateNP();updateTarget(S.repeatCount);
+    document.getElementById('badgeRep').textContent=S.repeatCount+' ×';
+    document.getElementById('badgePause').textContent=S.pauseSec;
+    addLog(tr('sessionStart'));
+    updateWave();
+  }).catch(err=>{
+    console.error('Start error:',err);
+    setStatus({ar:'اضغط ▶ للتشغيل',en:'Tap ▶ to play',sw:'Bonyeza ▶ kucheza'}[LANG]);
+  });
 }
 function stopSession(){
   audio.pause();audio.currentTime=0;S.playing=false;S.done=0;
