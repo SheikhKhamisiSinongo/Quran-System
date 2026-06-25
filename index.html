@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="ar" dir="rtl" id="htmlRoot">
 <head>
   <meta charset="UTF-8"/>
@@ -369,8 +369,9 @@
       <div class="card">
         <div class="card-title">🎙️ <span data-ar="القارئ" data-en="Reciter"></span></div>
         <div class="reciter-tabs" id="reciterTabs">
-          <button class="reciter-tab active" onclick="selectReciter('abdulbasit',this)">عبد الباسط</button>
-          <button class="reciter-tab" onclick="selectReciter('rifai',this)">هاني الرفاعي</button>
+          <button class="reciter-tab active" onclick="selectReciter('ar.abdulbasitmurattal',this)">عبد الباسط</button>
+          <button class="reciter-tab" onclick="selectReciter('ar.saoodshuraym',this)">سعد الغامدي</button>
+          <button class="reciter-tab" onclick="selectReciter('ar.hanirifai',this)">هاني الرفاعي</button>
         </div>
       </div>
       <div class="card">
@@ -492,24 +493,7 @@ const tr=(k,...a)=>{const v=T[LANG][k];return typeof v==='function'?v(...a):v;};
 
 const SAR=['الفاتحة','البقرة','آل عمران','النساء','المائدة','الأنعام','الأعراف','الأنفال','التوبة','يونس','هود','يوسف','الرعد','إبراهيم','الحجر','النحل','الإسراء','الكهف','مريم','طه','الأنبياء','الحج','المؤمنون','النور','الفرقان','الشعراء','النمل','القصص','العنكبوت','الروم','لقمان','السجدة','الأحزاب','سبأ','فاطر','يس','الصافات','ص','الزمر','غافر','فصلت','الشورى','الزخرف','الدخان','الجاثية','الأحقاف','محمد','الفتح','الحجرات','ق','الذاريات','الطور','النجم','القمر','الرحمن','الواقعة','الحديد','المجادلة','الحشر','الممتحنة','الصف','الجمعة','المنافقون','التغابن','الطلاق','التحريم','الملك','القلم','الحاقة','المعارج','نوح','الجن','المزمل','المدثر','القيامة','الإنسان','المرسلات','النبأ','النازعات','عبس','التكوير','الانفطار','المطففين','الانشقاق','البروج','الطارق','الأعلى','الغاشية','الفجر','البلد','الشمس','الليل','الضحى','الشرح','التين','العلق','القدر','البينة','الزلزلة','العاديات','القارعة','التكاثر','العصر','الهمزة','الفيل','قريش','الماعون','الكوثر','الكافرون','النصر','المسد','الإخلاص','الفلق','الناس'];
 const SEN=['Al-Fatihah','Al-Baqarah','Aal-Imran','An-Nisa','Al-Maidah','Al-Anam','Al-Araf','Al-Anfal','At-Tawbah','Yunus','Hud','Yusuf','Ar-Rad','Ibrahim','Al-Hijr','An-Nahl','Al-Isra','Al-Kahf','Maryam','Taha','Al-Anbiya','Al-Hajj','Al-Muminun','An-Nur','Al-Furqan','Ash-Shuara','An-Naml','Al-Qasas','Al-Ankabut','Ar-Rum','Luqman','As-Sajdah','Al-Ahzab','Saba','Fatir','Ya-Sin','As-Saffat','Sad','Az-Zumar','Ghafir','Fussilat','Ash-Shura','Az-Zukhruf','Ad-Dukhan','Al-Jathiyah','Al-Ahqaf','Muhammad','Al-Fath','Al-Hujurat','Qaf','Adh-Dhariyat','At-Tur','An-Najm','Al-Qamar','Ar-Rahman','Al-Waqiah','Al-Hadid','Al-Mujadilah','Al-Hashr','Al-Mumtahanah','As-Saf','Al-Jumuah','Al-Munafiqun','At-Taghabun','At-Talaq','At-Tahrim','Al-Mulk','Al-Qalam','Al-Haqqah','Al-Maarij','Nuh','Al-Jinn','Al-Muzzammil','Al-Muddaththir','Al-Qiyamah','Al-Insan','Al-Mursalat','An-Naba','An-Naziat','Abasa','At-Takwir','Al-Infitar','Al-Mutaffifin','Al-Inshiqaq','Al-Buruj','At-Tariq','Al-Ala','Al-Ghashiyah','Al-Fajr','Al-Balad','Ash-Shams','Al-Layl','Ad-Duha','Ash-Sharh','At-Tin','Al-Alaq','Al-Qadr','Al-Bayyinah','Az-Zalzalah','Al-Adiyat','Al-Qariah','At-Takathur','Al-Asr','Al-Humazah','Al-Fil','Quraysh','Al-Maun','Al-Kawthar','Al-Kafirun','An-Nasr','Al-Masad','Al-Ikhlas','Al-Falaq','An-Nas'];
-const RECITERS={
-  'abdulbasit':{ar:'عبد الباسط عبد الصمد',en:'Abdul Basit',folder:'abdulbasit',cdn:'ar.abdulbasitmurattal'},
-  'rifai':     {ar:'هاني الرفاعي',         en:'Hani Al-Rifai',folder:'rifai',     cdn:'ar.hanirifai'},
-};
-
-// Get audio URL — tries local first, falls back to CDN
-function getAudioUrl(reciterKey, surahNum) {
-  const num = String(surahNum).padStart(3,'0');
-  const rec = RECITERS[reciterKey];
-  // If running from GitHub Pages (files uploaded) — use local
-  const isGH = window.location.hostname.includes('github.io') ||
-               window.location.protocol === 'file:';
-  if (isGH && rec.folder) {
-    return `audio/${rec.folder}/${num}.mp3`;
-  }
-  // Fallback to CDN (needs internet)
-  return `https://cdn.islamic.network/quran/audio-surah/128/${rec.cdn}/${surahNum}.mp3`;
-}
+const RECITERS={'ar.abdulbasitmurattal':{ar:'عبد الباسط عبد الصمد',en:'Abdul Basit'},'ar.saoodshuraym':{ar:'سعد الغامدي',en:'Saad Al-Ghamdi'},'ar.hanirifai':{ar:'هاني الرفاعي',en:'Hani Al-Rifai'}};
 
 const S={currentReciter:'ar.abdulbasitmurattal',currentSurah:null,files:[],idx:-1,mode:'library',playing:false,repeatCount:3,pauseSec:3,speed:1,done:0,log:[],timer:null};
 const audio=document.getElementById('audioEl');
@@ -560,8 +544,9 @@ function applyTrans(){
   document.getElementById('dispBasmala').textContent=tr('basmala');
   document.getElementById('badgeSpd').textContent=`×${S.speed}`;
   // reciter tab labels
+  const rTabs=document.querySelectorAll('.reciter-tab');
   const rKeys=Object.keys(RECITERS);
-  document.querySelectorAll('.reciter-tab').forEach((btn,i)=>{if(rKeys[i])btn.textContent=RECITERS[rKeys[i]][LANG];});
+  rTabs.forEach((btn,i)=>{if(rKeys[i])btn.textContent=RECITERS[rKeys[i]][LANG];});
 }
 
 // ══ TABS ══
@@ -573,7 +558,7 @@ function goTab(name,el){
 }
 
 // ══ LIBRARY ══
-let currentReciterKey='abdulbasit';
+let currentReciterKey='ar.abdulbasitmurattal';
 function selectReciter(key,btn){
   currentReciterKey=key;S.currentReciter=key;
   document.querySelectorAll('.reciter-tab').forEach(b=>b.classList.remove('active'));
@@ -603,11 +588,11 @@ function filterSurahs(v){renderSurahs(v);}
 function selectSurah(num){
   S.currentSurah={num,arName:SAR[num-1],enName:SEN[num-1]};
   S.mode='library';S.done=0;
-  const url=getAudioUrl(currentReciterKey,num);
-  audio.src=url;
+  audio.src=`https://cdn.islamic.network/quran/audio-surah/128/${currentReciterKey}/${num}.mp3`;
   audio.playbackRate=S.speed;
   updateNP();renderSurahs(document.getElementById('surahSearch').value);
   addLog(`${LANG==='ar'?'تم اختيار':'Selected'}: ${SAR[num-1]}`);
+  // go to player
   document.querySelectorAll('.tab')[0].click();
   setStatus(tr('ready'));
 }
@@ -692,12 +677,8 @@ function setStatus(txt){document.getElementById('npStatus').textContent=txt;}
 function setRep(n){document.getElementById('repeatDisplay').textContent=n;document.getElementById('dispCounter').textContent=n;}
 function updateNP(){
   let sd='—',md='';
-  if(S.currentSurah){
-    sd=`${tr('surahPfx')} ${LANG==='ar'?S.currentSurah.arName:S.currentSurah.enName}`;
-    md=RECITERS[currentReciterKey][LANG];
-  }else if(S.mode==='upload'&&S.files[S.idx]){
-    sd=S.files[S.idx].name.replace(/\.[^.]+$/,'');md=tr('audioFile');
-  }
+  if(S.currentSurah){sd=`${tr('surahPfx')} ${LANG==='ar'?S.currentSurah.arName:S.currentSurah.enName}`;md=RECITERS[currentReciterKey][LANG];}
+  else if(S.mode==='upload'&&S.files[S.idx]){sd=S.files[S.idx].name.replace(/\.[^.]+$/,'');md=tr('audioFile');}
   document.getElementById('npSurah').textContent=sd;
   document.getElementById('npMeta').textContent=md;
   document.getElementById('dispSurah').textContent=sd;
