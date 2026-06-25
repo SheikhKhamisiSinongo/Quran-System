@@ -421,12 +421,32 @@
 
     <!-- PAGE 4: LOG -->
     <div class="page" id="page-log">
+
+      <!-- OFFLINE DOWNLOAD CARD -->
+      <div class="card" style="border:2px solid var(--green-lt);">
+        <div class="card-title">📥 <span id="offlineTitle">Download All for Offline</span></div>
+        <p id="offlineDesc" style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:12px;">
+          Download all 228 surahs (Abdul Basit + Hani Al-Rifai) once while connected. After that — works 100% without internet forever! 🌙
+        </p>
+        <div id="cacheProgress" style="display:none;margin-bottom:10px;">
+          <div style="width:100%;height:8px;background:#E5E7EB;border-radius:4px;overflow:hidden;margin-bottom:6px;">
+            <div id="cacheBar" style="height:100%;background:var(--gold);border-radius:4px;width:0%;transition:width .2s;"></div>
+          </div>
+          <div id="cacheLabel" style="font-size:11px;color:var(--muted);text-align:center;line-height:1.5;"></div>
+        </div>
+        <button id="cacheBtn" onclick="cacheAllSurahs()" style="width:100%;padding:14px;background:var(--green);color:white;border:none;border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">
+          📥 Download All 228 Surahs
+        </button>
+        <p style="font-size:10px;color:var(--muted);text-align:center;margin-top:8px;">⚡ Needs internet once — then works offline forever</p>
+      </div>
+
       <div class="card">
-        <div class="card-title">📋 <span data-ar="سجل الجلسة" data-en="Session Log"></span></div>
+        <div class="card-title">📋 <span id="logCardTitle">Session Log</span></div>
         <div class="log-list" id="logList">
-          <div class="log-item"><span class="log-time">—</span><span data-ar="في انتظار بدء الجلسة" data-en="Waiting to start..."></span></div>
+          <div class="log-item"><span class="log-time">—</span><span>Waiting to start...</span></div>
         </div>
       </div>
+
     </div>
 
   </div>
@@ -653,8 +673,21 @@ function applyTrans(){
     if(v)o.textContent=v;
   });
 
-  // Display overlay label
-  document.querySelector('.disp-label').innerHTML=`${tr('of')} <span id="dispTarget">${S.repeatCount}</span>`;
+  // Offline card
+  const offlineTitles={ar:'📥 تحميل كل السور للاستخدام بدون إنترنت',en:'📥 Download All for Offline',sw:'📥 Pakua Zote bila Mtandao'};
+  const offlineDescs={
+    ar:'حمّل كل 228 سورة (عبد الباسط + هاني الرفاعي) مرة واحدة أثناء الاتصال بالإنترنت — ثم تعمل بدون إنترنت إلى الأبد! 🌙',
+    en:'Download all 228 surahs (Abdul Basit + Hani Al-Rifai) once while connected. After that — works 100% without internet forever! 🌙',
+    sw:'Pakua sura zote 228 (Abdul Basit + Hani Al-Rifai) mara moja ukiwa na mtandao. Baada ya hapo — inafanya kazi bila mtandao milele! 🌙'
+  };
+  const el1=document.getElementById('offlineTitle');
+  const el2=document.getElementById('offlineDesc');
+  if(el1)el1.textContent=offlineTitles[LANG];
+  if(el2)el2.textContent=offlineDescs[LANG];
+  // Log card title
+  const logTitles={ar:'سجل الجلسة',en:'Session Log',sw:'Kumbukumbu ya Kipindi'};
+  const el3=document.getElementById('logCardTitle');
+  if(el3)el3.textContent=logTitles[LANG];
 }
 
 // ══ TABS ══
@@ -825,6 +858,86 @@ function addLog(msg){const now=new Date(),time=`${now.getHours().toString().padS
 function showDisplay(){document.getElementById('displayOverlay').classList.add('show');updateNP();}
 function closeDisplay(){document.getElementById('displayOverlay').classList.remove('show');}
 function updateWave(){document.querySelectorAll('.wave-bar').forEach(b=>b.style.animationPlayState=S.playing?'running':'paused');}
+
+// ══ SERVICE WORKER + CACHE ALL ══
+const AUDIO_CACHE = 'quran-audio-v1';
+
+// Register service worker
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+
+// Cache all surahs in background
+async function cacheAllSurahs(){
+  const btn = document.getElementById('cacheBtn');
+  const prog = document.getElementById('cacheProgress');
+  const bar = document.getElementById('cacheBar');
+  const label = document.getElementById('cacheLabel');
+
+  if(!('caches' in window)){
+    alert('Your browser does not support offline caching. Try Chrome.');
+    return;
+  }
+
+  btn.disabled = true;
+  prog.style.display = 'block';
+
+  const reciters = [
+    {key:'abdulbasit', base:'https://download.quranicaudio.com/quran/abdulbasit_murattal'},
+    {key:'rifai',      base:'https://download.quranicaudio.com/quran/hani_rifai'},
+  ];
+
+  const total = 114 * 2;
+  let done = 0;
+  let failed = 0;
+
+  const cache = await caches.open(AUDIO_CACHE);
+
+  for(const rec of reciters){
+    for(let i=1; i<=114; i++){
+      const num = String(i).padStart(3,'0');
+      const url = `${rec.base}/${num}.mp3`;
+      const pct = Math.round((done/total)*100);
+      bar.style.width = pct+'%';
+      label.textContent = `${done}/${total} — ${rec.key==='abdulbasit'?'عبد الباسط':'هاني الرفاعي'} — ${SAR[i-1]}`;
+      try{
+        const cached = await cache.match(url);
+        if(!cached){
+          const res = await fetch(url);
+          if(res.ok) await cache.put(url, res);
+        }
+        done++;
+      }catch(e){
+        failed++;
+        done++;
+      }
+    }
+  }
+
+  bar.style.width='100%';
+  bar.style.background='var(--green-lt)';
+  label.textContent = failed===0
+    ? '✅ All 228 surahs cached! Now works offline forever.'
+    : `✅ Done! ${done-failed} cached, ${failed} failed.`;
+  btn.textContent = '✅ Cached!';
+  btn.style.background = 'var(--green-lt)';
+  addLog('✅ All surahs cached for offline use');
+}
+
+// Check how many are cached
+async function checkCache(){
+  if(!('caches' in window)) return;
+  try{
+    const cache = await caches.open(AUDIO_CACHE);
+    const keys = await cache.keys();
+    const mp3s = keys.filter(r=>r.url.includes('.mp3'));
+    if(mp3s.length > 0){
+      const btn = document.getElementById('cacheBtn');
+      if(btn) btn.textContent = `♻️ Re-cache (${mp3s.length}/228 cached)`;
+    }
+  }catch(e){}
+}
+setTimeout(checkCache, 1000);
 
 // ══ SWIPE ══
 let tx=0;
