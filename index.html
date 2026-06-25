@@ -493,9 +493,21 @@
   <div class="disp-label"><span data-ar="تكرار من" data-en="repeat of"></span> <span id="dispTarget">3</span></div>
 </div>
 
-<audio id="audioEl" preload="none"></audio>
+<audio id="audioEl" preload="auto" crossorigin="anonymous"></audio>
 
 <script>
+// Audio error handler
+window.addEventListener('DOMContentLoaded', ()=>{
+  const audioEl = document.getElementById('audioEl');
+  audioEl.addEventListener('error', function(){
+    const msg = {ar:'❌ تعذّر تحميل الصوت — تحقق من الإنترنت',en:'❌ Audio failed — check internet',sw:'❌ Sauti haijapakiwa — angalia mtandao'}[LANG||'en']||'❌ Audio error';
+    if(typeof setStatus==='function') setStatus(msg);
+    if(typeof addLog==='function') addLog(msg);
+    S && (S.playing=false);
+    const btn=document.getElementById('playBtn');
+    if(btn) btn.textContent='▶';
+  });
+});
 // ══ STATE ══
 let LANG='ar';
 const T={
@@ -546,24 +558,7 @@ const tr=(k,...a)=>{const v=T[LANG][k];return typeof v==='function'?v(...a):v;};
 
 const SAR=['الفاتحة','البقرة','آل عمران','النساء','المائدة','الأنعام','الأعراف','الأنفال','التوبة','يونس','هود','يوسف','الرعد','إبراهيم','الحجر','النحل','الإسراء','الكهف','مريم','طه','الأنبياء','الحج','المؤمنون','النور','الفرقان','الشعراء','النمل','القصص','العنكبوت','الروم','لقمان','السجدة','الأحزاب','سبأ','فاطر','يس','الصافات','ص','الزمر','غافر','فصلت','الشورى','الزخرف','الدخان','الجاثية','الأحقاف','محمد','الفتح','الحجرات','ق','الذاريات','الطور','النجم','القمر','الرحمن','الواقعة','الحديد','المجادلة','الحشر','الممتحنة','الصف','الجمعة','المنافقون','التغابن','الطلاق','التحريم','الملك','القلم','الحاقة','المعارج','نوح','الجن','المزمل','المدثر','القيامة','الإنسان','المرسلات','النبأ','النازعات','عبس','التكوير','الانفطار','المطففين','الانشقاق','البروج','الطارق','الأعلى','الغاشية','الفجر','البلد','الشمس','الليل','الضحى','الشرح','التين','العلق','القدر','البينة','الزلزلة','العاديات','القارعة','التكاثر','العصر','الهمزة','الفيل','قريش','الماعون','الكوثر','الكافرون','النصر','المسد','الإخلاص','الفلق','الناس'];
 const SEN=['Al-Fatihah','Al-Baqarah','Aal-Imran','An-Nisa','Al-Maidah','Al-Anam','Al-Araf','Al-Anfal','At-Tawbah','Yunus','Hud','Yusuf','Ar-Rad','Ibrahim','Al-Hijr','An-Nahl','Al-Isra','Al-Kahf','Maryam','Taha','Al-Anbiya','Al-Hajj','Al-Muminun','An-Nur','Al-Furqan','Ash-Shuara','An-Naml','Al-Qasas','Al-Ankabut','Ar-Rum','Luqman','As-Sajdah','Al-Ahzab','Saba','Fatir','Ya-Sin','As-Saffat','Sad','Az-Zumar','Ghafir','Fussilat','Ash-Shura','Az-Zukhruf','Ad-Dukhan','Al-Jathiyah','Al-Ahqaf','Muhammad','Al-Fath','Al-Hujurat','Qaf','Adh-Dhariyat','At-Tur','An-Najm','Al-Qamar','Ar-Rahman','Al-Waqiah','Al-Hadid','Al-Mujadilah','Al-Hashr','Al-Mumtahanah','As-Saf','Al-Jumuah','Al-Munafiqun','At-Taghabun','At-Talaq','At-Tahrim','Al-Mulk','Al-Qalam','Al-Haqqah','Al-Maarij','Nuh','Al-Jinn','Al-Muzzammil','Al-Muddaththir','Al-Qiyamah','Al-Insan','Al-Mursalat','An-Naba','An-Naziat','Abasa','At-Takwir','Al-Infitar','Al-Mutaffifin','Al-Inshiqaq','Al-Buruj','At-Tariq','Al-Ala','Al-Ghashiyah','Al-Fajr','Al-Balad','Ash-Shams','Al-Layl','Ad-Duha','Ash-Sharh','At-Tin','Al-Alaq','Al-Qadr','Al-Bayyinah','Az-Zalzalah','Al-Adiyat','Al-Qariah','At-Takathur','Al-Asr','Al-Humazah','Al-Fil','Quraysh','Al-Maun','Al-Kawthar','Al-Kafirun','An-Nasr','Al-Masad','Al-Ikhlas','Al-Falaq','An-Nas'];
-const RECITERS={
-  'abdulbasit':{ar:'عبد الباسط عبد الصمد',en:'Abdul Basit',folder:'abdulbasit',cdn:'ar.abdulbasitmurattal'},
-  'rifai':     {ar:'هاني الرفاعي',         en:'Hani Al-Rifai',folder:'rifai',     cdn:'ar.hanirifai'},
-};
-
-// Get audio URL — tries local first, falls back to CDN
-function getAudioUrl(reciterKey, surahNum) {
-  const num = String(surahNum).padStart(3,'0');
-  const rec = RECITERS[reciterKey];
-  // If running from GitHub Pages (files uploaded) — use local
-  const isGH = window.location.hostname.includes('github.io') ||
-               window.location.protocol === 'file:';
-  if (isGH && rec.folder) {
-    return `audio/${rec.folder}/${num}.mp3`;
-  }
-  // Fallback to CDN (needs internet)
-  return `https://cdn.islamic.network/quran/audio-surah/128/${rec.cdn}/${surahNum}.mp3`;
-}
+const RECITERS={'ar.abdulbasitmurattal':{ar:'عبد الباسط عبد الصمد',en:'Abdul Basit'},'ar.saoodshuraym':{ar:'سعد الغامدي',en:'Saad Al-Ghamdi'},'ar.hanirifai':{ar:'هاني الرفاعي',en:'Hani Al-Rifai'}};
 
 const S={currentReciter:'ar.abdulbasitmurattal',currentSurah:null,files:[],idx:-1,mode:'library',playing:false,repeatCount:3,pauseSec:3,speed:1,done:0,log:[],timer:null};
 const audio=document.getElementById('audioEl');
@@ -729,14 +724,36 @@ function filterSurahs(v){renderSurahs(v);}
 function selectSurah(num){
   S.currentSurah={num,arName:SAR[num-1],enName:SEN[num-1]};
   S.mode='library';S.done=0;
-  const url=getAudioUrl(currentReciterKey,num);
-  audio.src=url;
+  audio.src=`https://cdn.islamic.network/quran/audio-surah/128/${currentReciterKey}/${num}.mp3`;
   audio.playbackRate=S.speed;
   updateNP();renderSurahs(document.getElementById('surahSearch').value);
-  const logPrefix={ar:'تم اختيار',en:'Selected',sw:'Imechaguliwa'}[LANG];
-  addLog(`${logPrefix}: ${SAR[num-1]} — ${SEN[num-1]}`);
+  addLog(`${LANG==='ar'?'تم اختيار':'Selected'}: ${SAR[num-1]}`);
+  // go to player
   document.querySelectorAll('.tab')[0].click();
-  setStatus(tr('ready'));
+  // Load audio with fallback
+  loadAudioWithFallback(currentReciterKey, num).then(ok=>{
+    if(ok){
+      audio.playbackRate=S.speed;
+      setStatus({ar:'اضغط ▶ للتشغيل',en:'Tap ▶ to play',sw:'Bonyeza ▶ kucheza'}[LANG]);
+    } else {
+      setStatus({ar:'❌ فشل التحميل — تحقق من الإنترنت',en:'❌ Load failed — check internet',sw:'❌ Imeshindwa — angalia mtandao'}[LANG]);
+    }
+  });
+}
+
+function updateNP(){
+  let sd='—',md='';
+  if(S.currentSurah){
+    const name=LANG==='ar'?S.currentSurah.arName:S.currentSurah.enName;
+    sd=`${tr('surahPfx')} ${name}`;
+    md=RECITERS[currentReciterKey][LANG==='sw'?'en':LANG]||RECITERS[currentReciterKey].en;
+  }else if(S.mode==='upload'&&S.files[S.idx]){
+    sd=S.files[S.idx].name.replace(/\.[^.]+$/,'');md=tr('audioFile');
+  }
+  document.getElementById('npSurah').textContent=sd;
+  document.getElementById('npMeta').textContent=md;
+  document.getElementById('dispSurah').textContent=sd;
+  document.getElementById('dispVerse').textContent=md;
 }
 
 function updateNP(){
@@ -776,23 +793,58 @@ function removeFile(i){URL.revokeObjectURL(S.files[i].url);S.files.splice(i,1);i
 
 // ══ PLAYBACK ══
 function togglePlay(){
-  if(!audio.src||audio.src===window.location.href){alert(tr('addFiles'));return;}
-  if(S.playing){audio.pause();S.playing=false;document.getElementById('playBtn').textContent='▶';setStatus(tr('paused'));}
-  else{audio.play().catch(()=>{});S.playing=true;document.getElementById('playBtn').textContent='⏸';setStatus(tr('playing'));}
+  if(!audio.src||audio.src===window.location.href){
+    alert(tr('addFiles'));return;
+  }
+  if(S.playing){
+    audio.pause();S.playing=false;
+    document.getElementById('playBtn').textContent='▶';
+    setStatus(tr('paused'));
+  }else{
+    audio.play().then(()=>{
+      S.playing=true;
+      document.getElementById('playBtn').textContent='⏸';
+      setStatus(tr('playing'));
+    }).catch(err=>{
+      console.error('Play error:',err);
+      setStatus({ar:'خطأ في التشغيل — جرب مرة أخرى',en:'Play error — try again',sw:'Hitilafu — jaribu tena'}[LANG]);
+    });
+  }
   updateWave();
 }
+
 function startSession(){
-  if(!audio.src||audio.src===window.location.href){alert(tr('addFiles'));return;}
+  if(!S.currentSurah && S.mode!=='upload'){alert(tr('addFiles'));return;}
   S.repeatCount=parseInt(document.getElementById('repeatCount').value);
   S.pauseSec=parseInt(document.getElementById('pauseDuration').value);
   S.done=0;setRep(0);
-  audio.currentTime=0;audio.playbackRate=S.speed;
-  audio.play().catch(()=>{});S.playing=true;
-  document.getElementById('playBtn').textContent='⏸';
-  setStatus(tr('playing'));updateNP();updateTarget(S.repeatCount);
+  updateTarget(S.repeatCount);
   document.getElementById('badgeRep').textContent=S.repeatCount+' ×';
   document.getElementById('badgePause').textContent=S.pauseSec;
-  addLog(tr('sessionStart'));updateWave();
+
+  const doPlay=()=>{
+    audio.currentTime=0;
+    audio.playbackRate=S.speed;
+    audio.play().then(()=>{
+      S.playing=true;
+      document.getElementById('playBtn').textContent='⏸';
+      setStatus(tr('playing'));
+      addLog(tr('sessionStart'));
+      updateWave();
+    }).catch(()=>{
+      setStatus({ar:'اضغط ▶ للتشغيل',en:'Tap ▶ to play',sw:'Bonyeza ▶ kucheza'}[LANG]);
+    });
+  };
+
+  if(S.mode==='library' && S.currentSurah){
+    // Reload with fallback in case source changed
+    loadAudioWithFallback(currentReciterKey, S.currentSurah.num).then(ok=>{
+      if(ok) doPlay();
+      else setStatus({ar:'❌ فشل التحميل',en:'❌ Load failed — check internet',sw:'❌ Imeshindwa'}[LANG]);
+    });
+  } else {
+    doPlay();
+  }
 }
 function stopSession(){
   audio.pause();audio.currentTime=0;S.playing=false;S.done=0;
